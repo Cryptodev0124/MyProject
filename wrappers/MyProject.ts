@@ -6,8 +6,16 @@ export function myProjectConfigToCell(config: MyProjectConfig): Cell {
     return beginCell().endCell();
 }
 
-export class MyProject implements Contract {
-    constructor(readonly address: Address, readonly init?: { code: Cell; data: Cell }) {}
+export default class MyProject implements Contract {
+    static createForDeploy(code: Cell, initialCounterValue: number): MyProject {
+        const data = beginCell()
+            .storeUint(initialCounterValue, 64)
+            .endCell();
+        const workchain = 0; // deploy to workchain 0
+        const address = contractAddress(workchain, { code, data });
+        return new MyProject(address, { code, data });
+    }
+    constructor(readonly address: Address, readonly init?: { code: Cell; data: Cell }) { }
 
     static createFromAddress(address: Address) {
         return new MyProject(address);
@@ -19,9 +27,10 @@ export class MyProject implements Contract {
         return new MyProject(contractAddress(workchain, init), init);
     }
 
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+    async sendDeploy(provider: ContractProvider, via: Sender) {
         await provider.internal(via, {
-            value,
+            value: "0.01", // send 0.01 TON to contract for rent
+            bounce: false,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell().endCell(),
         });

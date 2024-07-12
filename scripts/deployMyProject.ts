@@ -1,13 +1,53 @@
-import { toNano } from '@ton/core';
-import { MyProject } from '../wrappers/MyProject';
-import { compile, NetworkProvider } from '@ton/blueprint';
+import * as fs from "fs";
+import { getHttpEndpoint } from "@orbs-network/ton-access";
+import { mnemonicToWalletKey } from "ton-crypto";
+import { TonClient, Cell, WalletContractV4 } from "@ton/ton";
+import MyProject from "../wrappers/MyProject"; // this is the interface class from step 7
 
-export async function run(provider: NetworkProvider) {
-    const myProject = provider.open(MyProject.createFromConfig({}, await compile('MyProject')));
+export async function run() {
+    // initialize ton rpc client on testnet
+    const endpoint = await getHttpEndpoint({ network: "testnet" });
+    const client = new TonClient({ endpoint });
 
-    await myProject.sendDeploy(provider.sender(), toNano('0.05'));
+    // prepare Counter's initial code and data cells for deployment
+    const counterCode = Cell.fromBoc(fs.readFileSync("build/my_project.cell"))[0]; // compilation output from step 6
+    const initialCounterValue = Date.now(); // to avoid collisions use current number of milliseconds since epoch as initial value
+    const counter = MyProject.createForDeploy(counterCode, initialCounterValue);
 
-    await provider.waitForDeploy(myProject.address);
+    // exit if contract is already deployed
+    console.log("contract address:", counter.address.toString());
+    if (await client.isContractDeployed(counter.address)) {
+        return console.log("Counter already deployed");
+    }
 
-    // run methods on `myProject`
+    // open wallet v4 (notice the correct wallet version here)
+    const mnemonic = " giggle various pumpkin tortoise shallow crash fly place obtain episode lucky olympic refuse morning finish magnet consider dish library announce gospel raccoon lock record"; // your 24 secret words (replace ... with the rest of the words)
+    const key = await mnemonicToWalletKey(mnemonic.split(" "));
+    const wallet = WalletContractV4.create({ publicKey: key.publicKey, workchain: 0 });
+    console.log("wallet", key.publicKey);
+    if (!await client.isContractDeployed(wallet.address)) {
+        return console.log("wallet is not deployed");
+    }
+
+    // open wallet and read the current seqno of the wallet
+    const walletContract = client.open(wallet);
+    const walletSender = walletContract.sender(key.secretKey);
+    const seqno = await walletContract.getSeqno();
+
+    // send the deploy transaction
+    const counterContract = client.open(counter);
+    await counterContract.sendDeploy(walletSender);
+
+    // wait until confirmed
+    let currentSeqno = seqno;
+    while (currentSeqno == seqno) {
+        console.log("waiting for deploy transaction to confirm...");
+        await sleep(1500);
+        currentSeqno = await walletContract.getSeqno();
+    }
+    console.log("deploy transaction confirmed!");
+}
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
