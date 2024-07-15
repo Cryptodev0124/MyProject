@@ -35,4 +35,14 @@ export default class MyProject implements Contract {
             body: beginCell().endCell(),
         });
     }
+
+    // export default class Counter implements Contract {
+
+    async getCounter(provider: ContractProvider) {
+        const { stack } = await provider.get("counter", []);
+        return stack.readBigNumber();
+    }
+
+    // }
+
 }

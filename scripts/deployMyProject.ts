@@ -25,6 +25,7 @@ export async function run() {
     const key = await mnemonicToWalletKey(mnemonic.split(" "));
     const wallet = WalletContractV4.create({ publicKey: key.publicKey, workchain: 0 });
     console.log("wallet", key.publicKey);
+    console.log("deployed", await client.isContractDeployed(wallet.address));
     if (!await client.isContractDeployed(wallet.address)) {
         return console.log("wallet is not deployed");
     }
