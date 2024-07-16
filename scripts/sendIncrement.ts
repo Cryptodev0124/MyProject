@@ -9,7 +9,7 @@ export async function run() {
   const client = new TonClient({ endpoint });
 
   // open wallet v4 (notice the correct wallet version here)
-  const mnemonic = "unfold sugar water ..."; // your 24 secret words (replace ... with the rest of the words)
+  const mnemonic = "giggle various pumpkin tortoise shallow crash fly place obtain episode lucky olympic refuse morning finish magnet consider dish library announce gospel raccoon lock record"; // your 24 secret words (replace ... with the rest of the words)
   const key = await mnemonicToWalletKey(mnemonic.split(" "));
   const wallet = WalletContractV4.create({ publicKey: key.publicKey, workchain: 0 });
   if (!await client.isContractDeployed(wallet.address)) {
@@ -22,7 +22,7 @@ export async function run() {
   const seqno = await walletContract.getSeqno();
 
   // open Counter instance by address
-  const counterAddress = Address.parse("EQCS1AkMHYrelr5IgEctn3G1KLBXyCU-6A-UKbCibNzLuTC3"); // replace with your address from step 8
+  const counterAddress = Address.parse("EQDZ3uYrW208b9ou9HouR2aRknhzTWWRTA7ZeOmKoTYLL3cc"); // replace with your address from step 8
   const counter = new MyProject(counterAddress);
   const counterContract = client.open(counter);
 

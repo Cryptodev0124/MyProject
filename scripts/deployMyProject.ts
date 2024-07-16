@@ -8,7 +8,6 @@ export async function run() {
     // initialize ton rpc client on testnet
     const endpoint = await getHttpEndpoint({ network: "testnet" });
     const client = new TonClient({ endpoint });
-    console.log("test", endpoint, client);
 
     // prepare Counter's initial code and data cells for deployment
     const counterCode = Cell.fromBoc(fs.readFileSync("build/my_project.cell"))[0]; // compilation output from step 6
