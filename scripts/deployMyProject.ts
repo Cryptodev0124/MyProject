@@ -8,6 +8,7 @@ export async function run() {
     // initialize ton rpc client on testnet
     const endpoint = await getHttpEndpoint({ network: "testnet" });
     const client = new TonClient({ endpoint });
+    console.log("test", endpoint, client);
 
     // prepare Counter's initial code and data cells for deployment
     const counterCode = Cell.fromBoc(fs.readFileSync("build/my_project.cell"))[0]; // compilation output from step 6
@@ -21,10 +22,10 @@ export async function run() {
     }
 
     // open wallet v4 (notice the correct wallet version here)
-    const mnemonic = " giggle various pumpkin tortoise shallow crash fly place obtain episode lucky olympic refuse morning finish magnet consider dish library announce gospel raccoon lock record"; // your 24 secret words (replace ... with the rest of the words)
+    const mnemonic = "giggle various pumpkin tortoise shallow crash fly place obtain episode lucky olympic refuse morning finish magnet consider dish library announce gospel raccoon lock record"; // your 24 secret words (replace ... with the rest of the words)
     const key = await mnemonicToWalletKey(mnemonic.split(" "));
     const wallet = WalletContractV4.create({ publicKey: key.publicKey, workchain: 0 });
-    console.log("wallet", key.publicKey);
+    console.log("walletAddress", wallet.address);
     console.log("deployed", await client.isContractDeployed(wallet.address));
     if (!await client.isContractDeployed(wallet.address)) {
         return console.log("wallet is not deployed");
